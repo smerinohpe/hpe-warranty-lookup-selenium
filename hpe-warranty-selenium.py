@@ -23,12 +23,14 @@ def get_warranty_HTML(serial):
 
 # Time to waiting is page is ready 'delay'  
   try:
-    myElem = WebDriverWait(driver, delay).until(EC.presence_of_element_located((By.ID, 'captchaChars')))
+    WebDriverWait(driver, delay).until(EC.presence_of_element_located((By.ID, 'captchaChars')))
     print ("Page is ready!")
+    captcha_def(driver, serial)
   except TimeoutException:
     print ("Loading took too much time!")
     quit()
 
+def captcha_def(driver, serial):
   try:
     z = 0
     if z > 1:
@@ -39,10 +41,10 @@ def get_warranty_HTML(serial):
       size = element.size
       driver.save_screenshot('pageimage.png')
       # crop image
-      x = location['x'];
-      y = location['y'];
-      width = location['x']+size['width'];
-      height = location['y']+size['height'];
+      x = location['x']
+      y = location['y']
+      width = location['x']+size['width']
+      height = location['y']+size['height']
       im = Image.open('pageImage.png')
       im = im.crop((int(x), int(y), int(width), int(height)))
       im.save('captcha.png')
@@ -62,13 +64,15 @@ def get_warranty_HTML(serial):
       elif os.name == ("ce" or "nt" or "dos"): 
         os.system ("cls")
   except:
-    print('No more captcha needed')  
+    print('No more captcha needed')
+    get_data_serial(driver, serial)
+
+def get_data_serial(driver, serial):
   try:   
     driver.find_element_by_id('serialNumber0').send_keys(serial)
     driver.find_element_by_name('submitButton').click()
   except:
     print('Submit Button or field to fill with Serial not found, exit...')
-  
   try:
     driver.find_element_by_xpath('//*[@id="nonIntroBlock"]/div')
     product_n = input('*Product number: ')
@@ -92,7 +96,7 @@ def main(argv):
       argv = [0, input('Please insert your serial: ')]
 
   print('\nChecking for %s ... \n' % (argv[1]))
-  warranty_html = get_warranty_HTML(argv[1])
+  get_warranty_HTML(argv[1])
   
 if __name__ == "__main__":
     main(sys.argv)

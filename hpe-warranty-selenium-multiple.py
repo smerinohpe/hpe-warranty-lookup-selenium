@@ -18,7 +18,7 @@ def get_warranty_HTML(file):
   driver.get('https://support.hpe.com/hpsc/wc/public/find')
   # Time to waiting is page is ready 'delay'  
   try:
-    myElem = WebDriverWait(driver, delay).until(EC.presence_of_element_located((By.ID, 'captchaChars')))
+    WebDriverWait(driver, delay).until(EC.presence_of_element_located((By.ID, 'captchaChars')))
     print ("Page is ready!")
   except TimeoutException:
     print ("Loading took too much time!")
@@ -34,19 +34,19 @@ def get_warranty_HTML(file):
       size = element.size
       driver.save_screenshot('pageimage.png')
       # crop image
-      x = location['x'];
-      y = location['y'];
-      width = location['x']+size['width'];
-      height = location['y']+size['height'];
+      x = location['x']
+      y = location['y']
+      width = location['x']+size['width']
+      height = location['y']+size['height']
       im = Image.open('pageImage.png')
       im = im.crop((int(x), int(y), int(width), int(height)))
       im.save('captcha.png')
-      #os.startfile('captcha.png')
       img=Image.open('captcha.png')
       img.show()
       capt_re = input('Please insert captcha: ')
       driver.find_element_by_id('captchaChars').send_keys(capt_re)
       driver.find_element_by_id('captchaSubmitBtn').click()
+      img.close()
       os.system('TASKKILL /F /IM Microsoft.Photos.exe 2>NUL') #for windows 10
   except:
     print('No more captcha needed')
@@ -66,7 +66,7 @@ def get_warranty_HTML(file):
 def check_n(count_lines, file, driver):
   n = 0
   try:
-    myElem = WebDriverWait(driver, delay).until(EC.presence_of_element_located((By.ID, 'serialNumber%s' %(n))))
+    WebDriverWait(driver, delay).until(EC.presence_of_element_located((By.ID, 'serialNumber%s' %(n))))
     print ("Checking Serials, please wait...!")
   except TimeoutException:
     print ("Loading took too much time!")
@@ -109,11 +109,20 @@ def check_n(count_lines, file, driver):
     wait = input('All SN checked press ENTER to finish.')
 
 def main(argv):
-  if len(argv) != os.path.isfile('*.txt'):
-    argv = [0, input('Please insert your txt file: ')]
+  if len(argv) == os.path.isfile('*.txt'):
+    print('\nChecking for %s ... \n' % (argv[1]))
+    get_warranty_HTML(argv[1])
+  else:
+    while True:
+      argv = input('Please insert your txt file (q): ')
+      
+      if os.path.isfile(argv):
+        print('\nChecking for %s ... \n' % (argv))
+        get_warranty_HTML(argv)
+      if argv == 'q':
+        quit()
+      else:
+        print('Fichero no valido')
 
-  print('\nChecking for %s ... \n' % (argv[1]))
-  warranty_html = get_warranty_HTML(argv[1])
-  
 if __name__ == "__main__":
     main(sys.argv)
