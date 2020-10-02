@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
@@ -9,47 +10,20 @@ from selenium.common.exceptions import TimeoutException
 from PIL import Image
 
 chrome_options = Options()
-delay = 10 # seconds
+delay = 5 # seconds
 
 def get_warranty_HTML(file):
+  global driver
   chrome_options.add_argument("--headless")
   chrome_options.add_argument("--log-level=3")
   driver = webdriver.Chrome('C:/TEMP/chromedriver.exe', options=chrome_options)
   driver.get('https://support.hpe.com/hpsc/wc/public/find')
-  # Time to waiting is page is ready 'delay'  
-  try:
-    WebDriverWait(driver, delay).until(EC.presence_of_element_located((By.ID, 'captchaChars')))
-    print ("Page is ready!")
-  except TimeoutException:
-    print ("Loading took too much time!")
-    quit()
-	
-  try:
-    z = 0
-    if z > 1:
-      print('Captcha fail, try again...')
-    while driver.find_element_by_id('captchaChars'):
-      element = driver.find_element_by_xpath('//*[@id="captchaImg"]')
-      location = element.location
-      size = element.size
-      driver.save_screenshot('pageimage.png')
-      # crop image
-      x = location['x']
-      y = location['y']
-      width = location['x']+size['width']
-      height = location['y']+size['height']
-      im = Image.open('pageImage.png')
-      im = im.crop((int(x), int(y), int(width), int(height)))
-      im.save('captcha.png')
-      img=Image.open('captcha.png')
-      img.show()
-      capt_re = input('Please insert captcha: ')
-      driver.find_element_by_id('captchaChars').send_keys(capt_re)
-      driver.find_element_by_id('captchaSubmitBtn').click()
-      img.close()
-      os.system('TASKKILL /F /IM Microsoft.Photos.exe 2>NUL') #for windows 10
-  except:
-    print('No more captcha needed')
+  if os.name == "posix": 
+    os.system ("clear")
+  elif os.name == ("ce" or "nt" or "dos"): 
+    os.system ("cls")
+  
+  captchadef()
 
   count_lines = len(open(file).readlines())
   
@@ -81,6 +55,8 @@ def check_n(count_lines, file, driver):
     print('Submit Button not found, exit...')
     quit()
   
+  captchadef()
+  
   try:
     driver.find_element_by_xpath('//*[@id="nonIntroBlock"]/div')
     product_n = input('*Product number: ')
@@ -106,7 +82,44 @@ def check_n(count_lines, file, driver):
         print('\n')
         f.write('\n')
     f.close()
-    wait = input('All SN checked press ENTER to finish.')
+    input('All SN checked press ENTER to finish.')
+  driver.close()
+
+def captchadef():
+  global driver
+  # Time to waiting is page is ready 'delay'  
+  try:
+    WebDriverWait(driver, delay).until(EC.presence_of_element_located((By.ID, 'captchaChars')))
+  except TimeoutException:
+    print ("Loading took too much time or not captcha needed")
+    return()
+  try:
+    z = 0
+    if z > 1:
+      print('Captcha fail, try again...')
+    while driver.find_element_by_id('captchaChars'):
+      element = driver.find_element_by_xpath('//*[@id="captchaImg"]')
+      location = element.location
+      size = element.size
+      time.sleep(2)
+      driver.save_screenshot('pageimage.png')
+      # crop image
+      x = location['x']
+      y = location['y']
+      width = location['x']+size['width']
+      height = location['y']+size['height']
+      im = Image.open('pageImage.png')
+      im = im.crop((int(x), int(y), int(width), int(height)))
+      im.save('captcha.png')
+      img=Image.open('captcha.png')
+      img.show()
+      capt_re = input('Please insert captcha: ')
+      driver.find_element_by_id('captchaChars').send_keys(capt_re)
+      driver.find_element_by_id('captchaSubmitBtn').click()
+      os.system('TASKKILL /F /IM Microsoft.Photos.exe 2>NUL') #for windows 10
+  except:
+    print('No more captcha needed')
+  return()
 
 def main(argv):
   if len(argv) == os.path.isfile('*.txt'):
@@ -121,8 +134,6 @@ def main(argv):
         get_warranty_HTML(argv)
       if argv == 'q':
         quit()
-      else:
-        print('Fichero no valido')
-
+        
 if __name__ == "__main__":
     main(sys.argv)
